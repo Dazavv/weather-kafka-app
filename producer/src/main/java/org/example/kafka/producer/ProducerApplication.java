@@ -11,6 +11,6 @@ public class ProducerApplication {
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(ProducerApplication.class, args);
         WeatherProducer producer = context.getBean(WeatherProducer.class);
-        producer.startWeatherSending();
+        producer.startSending();
     }
 }

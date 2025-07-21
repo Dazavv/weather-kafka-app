@@ -3,7 +3,7 @@ package org.example.kafka.producer.model;
 import java.util.Random;
 
 public enum WeatherStatus {
-    RAINY, CLOUDY, WINDY, SNOWY, HOT, SUNNY;
+    RAINY, CLOUDY, WINDY, SUNNY;
 
     private static final Random PRNG = new Random();
 

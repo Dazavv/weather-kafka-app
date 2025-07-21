@@ -1,13 +1,11 @@
 package org.example.kafka.consumer.service.consumer;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.example.kafka.consumer.service.analytics.WeatherAnalyticsService;
 import org.example.kafka.consumer.service.event.WeatherEvent;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,16 +14,26 @@ import java.util.Map;
 
 @Slf4j
 @Service
-
+@Getter
 public class WeatherConsumer {
+    private final WeatherAnalyticsService weatherAnalyticsService;
     private final Map<String, List<WeatherEvent>> cityWeatherMap = new HashMap<>();
+
+    private final int expectedTotalEvents;
+    private int receivedEventsCount = 0;
+
+    public WeatherConsumer(WeatherAnalyticsService weatherAnalyticsService,
+                           @Value("${weather.expected-total-events}") int expectedTotalEvents) {
+        this.weatherAnalyticsService = weatherAnalyticsService;
+        this.expectedTotalEvents = expectedTotalEvents;
+    }
 
     public void processWeatherEvent(WeatherEvent weatherEvent) {
         cityWeatherMap.computeIfAbsent(weatherEvent.getCity(), city -> new ArrayList<>()).add(weatherEvent);
-        log.info("Processing event: {}", weatherEvent);
-    }
-
-    public Map<String, List<WeatherEvent>> getCityWeatherMap() {
-        return cityWeatherMap;
+        receivedEventsCount++;
+        if (receivedEventsCount >= expectedTotalEvents) {
+            log.info("Get stats from kafka");
+            weatherAnalyticsService.getStats(cityWeatherMap);
+        }
     }
 }

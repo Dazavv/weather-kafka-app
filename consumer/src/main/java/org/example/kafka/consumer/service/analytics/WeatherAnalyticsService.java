@@ -9,58 +9,59 @@ import org.springframework.stereotype.Service;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.util.*;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class WeatherAnalyticsService {
-    private final WeatherConsumer weatherConsumer;
-    private final Map<String, List<WeatherEvent>> cityWeatherMap = weatherConsumer.getCityWeatherMap();
-
-    public String getCityWithMostRainyDays() {
+    public WeatherEvent getCityWithMostRainyDays(Map<String, List<WeatherEvent>> cityWeatherMap) {
         return cityWeatherMap.entrySet().stream()
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                e -> (int) e.getValue().stream()
-                                        .filter(w -> w.getWeatherStatus() == WeatherStatus.RAINY)
-                                        .count()
-                        )).entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
+                .max(Comparator.comparingInt(e ->
+                        (int) e.getValue().stream()
+                                .filter(w -> w.getWeatherStatus() == WeatherStatus.RAINY)
+                                .count()))
+                .map(e -> e.getValue().stream()
+                        .filter(w -> w.getWeatherStatus() == WeatherStatus.RAINY)
+                        .findFirst()
+                        .orElse(null))
                 .orElse(null);
-
     }
 
-    public String getHottestDay() {
-        return String.valueOf(cityWeatherMap.values().stream()
+    public WeatherEvent getHottestWeatherEvent(Map<String, List<WeatherEvent>> cityWeatherMap) {
+        return cityWeatherMap.values().stream()
                 .flatMap(List::stream)
                 .max(Comparator.comparingInt(WeatherEvent::getTemperature))
-                .orElse(null));
+                .orElse(null);
     }
 
-    public String getMinAverageTemperature() {
+    public WeatherEvent getMinAverageTemperature(Map<String, List<WeatherEvent>> cityWeatherMap) {
         return cityWeatherMap.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        e -> e.getValue().stream()
+                .min(Comparator.comparingDouble(e ->
+                        e.getValue().stream()
                                 .mapToInt(WeatherEvent::getTemperature)
                                 .average()
-                                .orElse(0)
-                ))
-                .entrySet().stream()
-                .min(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse("—");
+                                .orElse(Double.MAX_VALUE)))
+                .map(e -> e.getValue().stream()
+                        .min(Comparator.comparingInt(WeatherEvent::getTemperature))
+                        .orElse(null))
+                .orElse(null);
     }
 
-    public void getStats() {
-        try (FileWriter writer = new FileWriter("weather-stats.txt", true)) {
-            writer.write("Most rainy city: " + getCityWithMostRainyDays() + "\n");
 
+    public void getStats(Map<String, List<WeatherEvent>> cityWeatherMap) {
+        String rainiestCity = getCityWithMostRainyDays(cityWeatherMap).getCity();
+
+        WeatherEvent weatherEvent = getHottestWeatherEvent(cityWeatherMap);
+        LocalDate hottestDay = weatherEvent.getDate();
+        String hottestCity = weatherEvent.getCity();
+
+        String cityWithMinAverageTemp = getMinAverageTemperature(cityWeatherMap).getCity();
+
+        try (FileWriter writer = new FileWriter("weather-stats.txt", true)) {
+            writer.write("Most rainy city: " + rainiestCity + "\n"
+                    + "The hottest days in city: " + hottestCity + ", day: " + hottestDay + "\n"
+                    + "Minimum average temperature in city: " + cityWithMinAverageTemp + "\n");
         } catch (IOException e) {
             log.error("Failed to write stats", e);
         }

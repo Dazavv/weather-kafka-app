@@ -14,3 +14,6 @@ spring:
 
 topic:
   send-weather: weather-send-events
+
+server:
+  port: 8081
