@@ -1,8 +1,6 @@
 package org.example.kafka.consumer.service.analytics;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.kafka.consumer.service.consumer.WeatherConsumer;
 import org.example.kafka.consumer.service.event.WeatherEvent;
 import org.example.kafka.consumer.service.event.WeatherStatus;
 import org.springframework.stereotype.Service;
@@ -58,10 +56,14 @@ public class WeatherAnalyticsService {
 
         String cityWithMinAverageTemp = getMinAverageTemperature(cityWeatherMap).getCity();
 
+        String stats = "Most rainy city: " + rainiestCity + "\n"
+                + "The hottest day in city: " + hottestCity + ", day: " + hottestDay + "\n"
+                + "Minimum average temperature in city: " + cityWithMinAverageTemp + "\n";
+
+        log.info("Weather Statistics:\n{}", stats);
+
         try (FileWriter writer = new FileWriter("weather-stats.txt", true)) {
-            writer.write("Most rainy city: " + rainiestCity + "\n"
-                    + "The hottest days in city: " + hottestCity + ", day: " + hottestDay + "\n"
-                    + "Minimum average temperature in city: " + cityWithMinAverageTemp + "\n");
+            writer.write(stats);
         } catch (IOException e) {
             log.error("Failed to write stats", e);
         }
