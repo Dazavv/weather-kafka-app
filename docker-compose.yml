@@ -28,7 +28,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: OUTSIDE://:29092,INTERNAL://:9092
-      KAFKA_ADVERTISED_LISTENERS: OUTSIDE://localhost:29092,INTERNAL://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: OUTSIDE://:29092,INTERNAL://kafka:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -63,20 +63,20 @@ services:
       echo -e 'Successfully created the following topics:'
       kafka-topics --bootstrap-server kafka:9092 --list
       "
-#  producer:
-#    build:
-#      context: .
-#      dockerfile: producer/Dockerfile
-#    ports:
-#      - 8083:8083
-#    depends_on:
-#      - kafka
-#
-#  consumer:
-#    build:
-#      context: .
-#      dockerfile: consumer/Dockerfile
-#    ports:
-#      - 8084:8083
-#    depends_on:
-#      - kafka
+  producer:
+    build:
+      context: .
+      dockerfile: producer/Dockerfile
+    ports:
+      - 8083:8083
+    depends_on:
+      - kafka
+
+  consumer:
+    build:
+      context: .
+      dockerfile: consumer/Dockerfile
+    ports:
+      - 8084:8083
+    depends_on:
+      - kafka
